@@ -7,6 +7,9 @@ var sass = require("gulp-sass");
 var postcss = require("gulp-postcss");
 var autoprefixer = require("autoprefixer");
 var server = require("browser-sync").create();
+var del = require('del');
+var run = require("run-sequence");
+var imagemin = require("gulp-imagemin");
 
 gulp.task("css", function () {
     return gulp.src("source/scss/style.scss")
@@ -21,7 +24,7 @@ gulp.task("css", function () {
         .pipe(server.stream());
 });
 
-gulp.task("server", function () {
+gulp.task("server", ['css', 'html'], function () {
     server.init({
         server: "build/",
         notify: false,
@@ -30,14 +33,35 @@ gulp.task("server", function () {
         ui: false
     });
 
-    gulp.watch("source/less/**/*.scss", gulp.series("css"));
-    gulp.watch("source/*.html").on("change", server.reload);
+    gulp.watch("source/scss/**/*.scss", ["style"]);
+    gulp.watch("source/*.html", ["html"]).on("change", server.reload);
 });
-
 
 gulp.task("html", function () {
     return gulp.src("source/*.html")
         .pipe(gulp.dest("build"));
 });
 
-gulp.task("start", gulp.series("css", "html", "server"));
+gulp.task("clear", function () {
+    return del("build");
+});
+
+gulp.task("images", function () {
+    return gulp.src("source/images/**/*.{png,jpg,svg}")
+        .pipe(imagemin([
+            imagemin.optipng({ optimizationLevel: 3 }),
+            imagemin.jpegtran({ progressive: true }),
+            imagemin.svgo()
+        ]))
+        .pipe(gulp.dest("build/img"));
+});
+
+gulp.task("build", function (done) {
+    run(
+        "clear",
+        "css",
+        "images",
+        "html",
+        done
+    )
+});
