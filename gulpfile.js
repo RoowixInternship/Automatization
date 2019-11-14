@@ -33,7 +33,7 @@ gulp.task("server", ['css', 'html'], function () {
         ui: false
     });
 
-    gulp.watch("source/scss/**/*.scss", ["style"]);
+    gulp.watch("source/scss/**/*.scss", ["css"]);
     gulp.watch("source/*.html", ["html"]).on("change", server.reload);
 });
 
